@@ -2,6 +2,8 @@ import express from "express";
 
 const app = express();
 
+app.use(express.json())
+
 const PORT = process.env.PORT || 3000;
 
 const users = [
@@ -22,6 +24,13 @@ app.get('/api/users',(request,response) => {
         )
     }
    return response.status(201).send(users)
+})
+
+app.post('/api/users',(request, response) => {
+    const {body} = request;
+    const newUser = {id:users[users.length -1].id + 1, ...body}
+    users.push(newUser);
+    return response.status(201).send(newUser);
 })
 
 app.get('/api/users/:id',(request,response) => {
