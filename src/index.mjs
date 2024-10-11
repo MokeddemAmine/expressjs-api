@@ -71,6 +71,18 @@ app.patch('/api/users/:id',(request,response) => {
     return response.sendStatus(200);
 })
 
+app.delete('/api/users/:id',(request,response) => {
+    const {params:{id}} = request;
+    const ID = parseInt(id);
+    if(isNaN(ID))
+        return response.sendStatus(400);
+    const indexUser = users.findIndex((user) => user.id == ID);
+    if(indexUser == -1)
+        return response.sendStatus(404);
+    users.splice(indexUser,1);
+    return response.sendStatus(200);
+})
+
 app.listen(PORT,() => {
     console.log(`Running on Port ${PORT}`);
 })
