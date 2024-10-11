@@ -44,6 +44,21 @@ app.get('/api/users/:id',(request,response) => {
     return response.send(getUser);
 })
 
+app.put('/api/users/:id',(request,response) => {
+    const {body,params:{id}} = request;
+    const theId = parseInt(id);
+    if(isNaN(theId))
+        return response.sendStatus(400);
+    const indexUser = users.findIndex((user) => user.id === theId)
+    if(indexUser == -1)
+        return response.sendStatus(404)
+    users[indexUser]  = {
+        id:theId,
+        ...body
+    }
+    return response.sendStatus(200);
+})
+
 app.listen(PORT,() => {
     console.log(`Running on Port ${PORT}`);
 })
