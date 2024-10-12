@@ -1,15 +1,10 @@
 import express from "express";
+import {query,body,validationResult, matchedData,checkSchema} from 'express-validator'
+import { createUserValidationSchema } from "./outils/validationSchemas.mjs";
 
 const app = express();
 
 app.use(express.json())
-
-const loggingMiddleware = (request,response,next) => {
-    console.log(`${request.method} - ${request.url}`);
-    next();
-}
-
-app.use(loggingMiddleware); 
 
 const resolveIndexByUserId = (request,response,next) => {
     const {params:{id}} = request;
@@ -31,11 +26,15 @@ const users = [
     {id:3,username:'nouri'}
 ];
 
-app.get('/',loggingMiddleware,(request,response) => {
+app.get('/',(request,response) => {
     response.status(201).send({msg:'amine mokeddem'})
 })
 
-app.get('/api/users',(request,response) => {
+app.get('/api/users',
+query('filter').isString().notEmpty().withMessage('Must be not empty').isLength({min:3,max:10}).withMessage('Must be at least 3-10 characters'),
+(request,response) => {
+    const result = validationResult(request);
+    console.log(result);
     const {query:{filter,value}} = request;
     if(filter && value){
         return response.send(
@@ -45,12 +44,19 @@ app.get('/api/users',(request,response) => {
    return response.status(201).send(users)
 })
 
-app.post('/api/users',(request, response) => {
-    const {body} = request;
-    const newUser = {id:users[users.length -1].id + 1, ...body}
-    users.push(newUser);
-    return response.status(201).send(newUser);
-})
+app.post(
+    '/api/users',
+    checkSchema(createUserValidationSchema),
+    (request, response) => {
+        const result = validationResult(request);
+        if(!result.isEmpty())
+            return response.status(400).send({errors: result.array()})
+        const data = matchedData(request);
+        const newUser = {id:users[users.length -1].id + 1, ...data}
+        users.push(newUser);
+        return response.status(201).send(newUser);
+    }
+)
 
 app.get('/api/users/:id',resolveIndexByUserId,(request,response) => {
     const {indexUser} = request;
