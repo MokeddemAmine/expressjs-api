@@ -15,20 +15,24 @@ router.get(
     .isLength({min:3,max:10})
     .withMessage('Must be at least 3-10 characters'),
     (request,response) => {
-        console.log(request.headers.cookie);
-        console.log(request.cookies);
-        console.log(request.signedCookies.ssid);
-        if(request.signedCookies.ssid && request.signedCookies.ssid == 'abcdefghijklmnopqrstuv'){
-            const result = validationResult(request);
-            const {query:{filter,value}} = request;
-            if(filter && value){
-                return response.send(
-                    users.filter((user) =>  user[filter].includes(value))
-                )
+        console.log(request.session.id);
+        request.sessionStore.get(request.session.id,(err,sessionData) => {
+            if(err){
+                console.log(err);
+                throw err;
             }
-            return response.status(201).send(users)
+            console.log(sessionData);
+        })
+        const result = validationResult(request);
+        const {query:{filter,value}} = request;
+        if(filter && value){
+            return response.send(
+                users.filter((user) =>  user[filter].includes(value))
+            )
         }
-        return response.send({msg: 'Sorry. you need the correct cookies'});
+        return response.status(201).send(users)
+        
+        
         
 })
 
