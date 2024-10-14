@@ -3,6 +3,8 @@ import { validationResult,query,checkSchema,matchedData } from "express-validato
 import { users } from "../outils/database.mjs";
 import { createUserValidationSchema } from "../outils/validationSchemas.mjs";
 import { resolveIndexByUserId } from "../outils/middleware.mjs";
+import { User } from "../mongoose/schemas/user.mjs";
+import { hashPassword } from "../outils/herlpers.mjs";
 
 const router = Router();
 
@@ -39,14 +41,21 @@ router.get(
 router.post(
     '/api/users',
     checkSchema(createUserValidationSchema),
-    (request, response) => {
+    async (request, response) => {
         const result = validationResult(request);
         if(!result.isEmpty())
-            return response.status(400).send({errors: result.array()})
+            return response.status(400).send(result.array());
         const data = matchedData(request);
-        const newUser = {id:users[users.length -1].id + 1, ...data}
-        users.push(newUser);
-        return response.status(201).send(newUser);
+        // hash the password with bcrypt 
+        data.password = hashPassword(data.password);
+        const newUser = new User(data);
+        try{
+            const savedUser = await newUser.save();
+            return response.status(201).send(savedUser);
+        }catch(err){
+            console.log(err);
+            return response.sendStatus(400);
+        }
     }
 )
 

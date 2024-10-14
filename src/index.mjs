@@ -4,8 +4,13 @@ import cookieParser from "cookie-parser";
 import session from "express-session";
 import passport from "passport";
 import './strategies/local-strategy.mjs';
+import mongoose from "mongoose";
 
 const app = express();
+
+mongoose.connect('mongodb://localhost/expressdb')
+    .then(() => console.log('DB connect'))
+    .catch((err) => console.log(`Error : ${err}`))
 
 app.use(express.json())
 app.use(cookieParser('secretpass'));

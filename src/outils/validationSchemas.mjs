@@ -19,5 +19,9 @@ export const createUserValidationSchema = {
             errorMessage:"Name is required"
         },
         isString:true,
+    },
+    password:{
+        notEmpty:true,
+        isString:true
     }
 }

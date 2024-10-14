@@ -1,6 +1,8 @@
 import passport from "passport";
 import { Strategy } from "passport-local";
 import { users } from "../outils/database.mjs";
+import { User } from "../mongoose/schemas/user.mjs";
+import { comparePassword } from "../outils/herlpers.mjs";
 
 passport.serializeUser((user,done) => {
     console.log(`Inside Serialize User`);
@@ -8,10 +10,10 @@ passport.serializeUser((user,done) => {
     done(null,user.id);
 })
 
-passport.deserializeUser((id,done) => {
+passport.deserializeUser(async (id,done) => {
     console.log(`Inside Deserialize`);
     try{
-        const findUser = users.find((user) => user.id == id);
+        const findUser = await User.findById(id);
         if(!findUser)
             throw new Error('User not found');
         done(null,findUser);
@@ -21,15 +23,14 @@ passport.deserializeUser((id,done) => {
 })
 
 export default passport.use(
-    new Strategy((username,password,done)=> {
-        console.log(`username:${username}`);
-        console.log(`password:${password}`);
+    new Strategy(async (username,password,done)=> {
         try{
-            const findUser = users.find((user) => user.username == username)
-            if(!findUser) 
-                throw new Error('User not found');
-            if(findUser.password !== password)
-                throw new Error('Invalid Credentials');
+            const findUser = await User.findOne({username})
+            if(!findUser)
+                throw new Error('Usre not found');
+            // comparing hashing password
+            if(comparePassword(password,findUser.password))
+                throw new Error('Bad Credentials');
             done(null,findUser);
         }catch(err){
             done(err,null);
